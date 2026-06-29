@@ -2,27 +2,19 @@
 set -e
 
 BASE="${1:-https://Ebinesh2511.github.io/resumBuilderConfig}"
-DB_NAME="resume_builder_v3"
+FILE="resume_builder_v3.archive"
 
-echo "==> Downloading..."
-curl -fL "$BASE/db-zip" -o "$DB_NAME.zip"
-
-echo "==> Extracting..."
-unzip -o "$DB_NAME.zip"
+echo "==> Downloading archive..."
+curl -fL "$BASE/db-archive" -o "$FILE"
 
 echo "==> Restoring..."
 docker run --rm \
-  -v "$(pwd):/restore" \
+  -v "$(pwd)/$FILE:/tmp/restore.archive" \
   --add-host host.docker.internal:host-gateway \
   mongo:latest \
-  mongorestore \
-    --host host.docker.internal \
-    --drop \
-    --db "$DB_NAME" \
-    "/restore/$DB_NAME"
+  mongorestore --host host.docker.internal --drop --archive=/tmp/restore.archive --gzip
 
 echo "==> Cleanup..."
-rm -f "$DB_NAME.zip"
-rm -rf "$DB_NAME"
+rm -f "$FILE"
 
 echo "Done."

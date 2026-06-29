@@ -3,30 +3,19 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$file = "resume_builder_v3.archive"
 
-$dbName = "resume_builder_v3"
-$zipUrl = "$Base/db-zip"
-$zipFile = "$dbName.zip"
-
-Write-Host "==> Downloading..."
-Invoke-WebRequest $zipUrl -OutFile $zipFile
-
-Write-Host "==> Extracting..."
-Expand-Archive $zipFile -DestinationPath . -Force
+Write-Host "==> Downloading archive..."
+Invoke-WebRequest "$Base/db-archive" -OutFile $file
 
 Write-Host "==> Restoring..."
 docker run --rm `
-  -v "${PWD}:/restore" `
+  -v "${PWD}/$file:/tmp/restore.archive" `
   --add-host host.docker.internal:host-gateway `
   mongo:latest `
-  mongorestore `
-    --host host.docker.internal `
-    --drop `
-    --db $dbName `
-    "/restore/$dbName"
+  mongorestore --host host.docker.internal --drop --archive=/tmp/restore.archive --gzip
 
 Write-Host "==> Cleanup..."
-Remove-Item $zipFile -Force
-Remove-Item $dbName -Recurse -Force
+Remove-Item $file -Force
 
 Write-Host "Done!"

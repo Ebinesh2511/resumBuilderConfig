@@ -44,8 +44,8 @@ code { background: #1c2128; padding: 0.125rem 0.375rem; border-radius: 3px; font
 </div>
 
 <div class="info">
-  <strong>Usage:</strong> Run the script to download the db dump zip, extract, and restore via one-time Docker container.<br>
-  <strong>Requires:</strong> <code>Docker</code> (pulls <code>mongo:latest</code> image automatically, container removed after restore).<br>
+  <strong>Usage:</strong> Run the script to download the compressed archive and restore via one-time Docker container. No extraction needed, container removed after restore.<br>
+  <strong>Requires:</strong> <code>Docker</code> (pulls <code>mongo:latest</code> image automatically).<br>
   <strong>Custom URL:</strong> Pass base URL as first arg: <code>./script https://your-site.com</code>
 </div>
 </main>
@@ -53,9 +53,9 @@ code { background: #1c2128; padding: 0.125rem 0.375rem; border-radius: 3px; font
 <script>
 (function() {
   var SCRIPTS = {
-    linux: '#!/bin/bash\nset -e\nBASE="${1:-https://Ebinesh2511.github.io/resumBuilderConfig}"\nDB_NAME="resume_builder_v3"\necho "==> Downloading..."\ncurl -fL "$BASE/db-zip" -o "$DB_NAME.zip"\nunzip -o "$DB_NAME.zip"\necho "==> Restoring..."\ndocker run --rm -v "$(pwd):/restore" --add-host host.docker.internal:host-gateway mongo:latest mongorestore --host host.docker.internal --drop --db "$DB_NAME" "/restore/$DB_NAME"\nrm -f "$DB_NAME.zip" && rm -rf "$DB_NAME"\necho "Done."',
-    mac: '#!/bin/bash\nset -e\nBASE="${1:-https://Ebinesh2511.github.io/resumBuilderConfig}"\nDB_NAME="resume_builder_v3"\necho "==> Downloading..."\ncurl -fL "$BASE/db-zip" -o "$DB_NAME.zip"\nunzip -o "$DB_NAME.zip"\necho "==> Restoring..."\ndocker run --rm -v "$(pwd):/restore" --add-host host.docker.internal:host-gateway mongo:latest mongorestore --host host.docker.internal --drop --db "$DB_NAME" "/restore/$DB_NAME"\nrm -f "$DB_NAME.zip" && rm -rf "$DB_NAME"\necho "Done."',
-    win: 'param([string]$Base = "https://Ebinesh2511.github.io/resumBuilderConfig")\n$ErrorActionPreference = "Stop"\n$dbName = "resume_builder_v3"\n$zipUrl = "$Base/db-zip"\n$zipFile = "$dbName.zip"\nWrite-Host "==> Downloading..."\nInvoke-WebRequest $zipUrl -OutFile $zipFile\nWrite-Host "==> Extracting..."\nExpand-Archive $zipFile -DestinationPath . -Force\nWrite-Host "==> Restoring..."\ndocker run --rm -v "${PWD}:/restore" --add-host host.docker.internal:host-gateway mongo:latest mongorestore --host host.docker.internal --drop --db $dbName "/restore/$dbName"\nWrite-Host "==> Cleanup..."\nRemove-Item $zipFile -Force\nRemove-Item $dbName -Recurse -Force\nWrite-Host "Done."'
+    linux: '#!/bin/bash\nset -e\nBASE="${1:-https://Ebinesh2511.github.io/resumBuilderConfig}"\nFILE="resume_builder_v3.archive"\necho "==> Downloading archive..."\ncurl -fL "$BASE/db-archive" -o "$FILE"\necho "==> Restoring..."\ndocker run --rm -v "$(pwd)/$FILE:/tmp/restore.archive" --add-host host.docker.internal:host-gateway mongo:latest mongorestore --host host.docker.internal --drop --archive=/tmp/restore.archive --gzip\nrm -f "$FILE"\necho "Done."',
+    mac: '#!/bin/bash\nset -e\nBASE="${1:-https://Ebinesh2511.github.io/resumBuilderConfig}"\nFILE="resume_builder_v3.archive"\necho "==> Downloading archive..."\ncurl -fL "$BASE/db-archive" -o "$FILE"\necho "==> Restoring..."\ndocker run --rm -v "$(pwd)/$FILE:/tmp/restore.archive" --add-host host.docker.internal:host-gateway mongo:latest mongorestore --host host.docker.internal --drop --archive=/tmp/restore.archive --gzip\nrm -f "$FILE"\necho "Done."',
+    win: 'param([string]$Base = "https://Ebinesh2511.github.io/resumBuilderConfig")\n$ErrorActionPreference = "Stop"\n$file = "resume_builder_v3.archive"\nWrite-Host "==> Downloading archive..."\nInvoke-WebRequest "$Base/db-archive" -OutFile $file\nWrite-Host "==> Restoring..."\ndocker run --rm -v "${PWD}/$file:/tmp/restore.archive" --add-host host.docker.internal:host-gateway mongo:latest mongorestore --host host.docker.internal --drop --archive=/tmp/restore.archive --gzip\nWrite-Host "==> Cleanup..."\nRemove-Item $file -Force\nWrite-Host "Done!"'
   };
   var FILENAMES = { linux: 'script.sh', mac: 'script.sh', win: 'script.ps1' };
   var LINKS = { linux: '/resumBuilderConfig/linux/script', mac: '/resumBuilderConfig/mac/script', win: '/resumBuilderConfig/win/script' };
