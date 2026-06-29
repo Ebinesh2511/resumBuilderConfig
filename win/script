@@ -1,0 +1,23 @@
+param(
+    [string]$Base = "https://Ebinesh2511.github.io/resumBuilderConfig"
+)
+
+$ErrorActionPreference = "Stop"
+$zipUrl = "$Base/db-zip"
+$dbName = "resume_builder_v3"
+$zipFile = "$dbName.zip"
+
+Write-Host "==> Downloading database dump from $zipUrl"
+Invoke-WebRequest -Uri $zipUrl -OutFile $zipFile
+
+Write-Host "==> Extracting..."
+Expand-Archive -Path $zipFile -DestinationPath . -Force
+
+Write-Host "==> Restoring to MongoDB..."
+mongorestore --drop --db $dbName "dump/$dbName"
+
+Write-Host "==> Cleanup..."
+Remove-Item $zipFile -Force
+Remove-Item "dump" -Recurse -Force
+
+Write-Host "Done! Database $dbName restored."
