@@ -9,8 +9,12 @@ curl -fL "$BASE/db-zip" -o resume_builder_v3.zip
 echo "==> Extracting..."
 unzip -o resume_builder_v3.zip
 
-echo "==> Restoring to MongoDB..."
-mongorestore --drop --db resume_builder_v3 dump/resume_builder_v3
+echo "==> Restoring via Docker (one-time)..."
+docker run --rm \
+  -v "$(pwd)/dump:/dump" \
+  --add-host host.docker.internal:host-gateway \
+  mongo:latest \
+  mongorestore --host host.docker.internal --drop --db resume_builder_v3 /dump/resume_builder_v3
 
 echo "==> Cleanup..."
 rm -f resume_builder_v3.zip

@@ -13,8 +13,12 @@ Invoke-WebRequest -Uri $zipUrl -OutFile $zipFile
 Write-Host "==> Extracting..."
 Expand-Archive -Path $zipFile -DestinationPath . -Force
 
-Write-Host "==> Restoring to MongoDB..."
-mongorestore --drop --db $dbName "dump/$dbName"
+Write-Host "==> Restoring via Docker (one-time)..."
+docker run --rm `
+  -v "$(pwd)/dump:/dump" `
+  --add-host host.docker.internal:host-gateway `
+  mongo:latest `
+  mongorestore --host host.docker.internal --drop --db $dbName /dump/$dbName
 
 Write-Host "==> Cleanup..."
 Remove-Item $zipFile -Force

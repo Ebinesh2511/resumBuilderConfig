@@ -44,8 +44,8 @@ code { background: #1c2128; padding: 0.125rem 0.375rem; border-radius: 3px; font
 </div>
 
 <div class="info">
-  <strong>Usage:</strong> Run the script to download the db dump zip, extract, and restore via <code>mongorestore --drop --db resume_builder_v3</code>.<br>
-  <strong>Requires:</strong> <code>mongorestore</code> (MongoDB Database Tools) installed locally.<br>
+  <strong>Usage:</strong> Run the script to download the db dump zip, extract, and restore via one-time Docker container.<br>
+  <strong>Requires:</strong> <code>Docker</code> (pulls <code>mongo:latest</code> image automatically, container removed after restore).<br>
   <strong>Custom URL:</strong> Pass base URL as first arg: <code>./script https://your-site.com</code>
 </div>
 </main>
@@ -53,9 +53,9 @@ code { background: #1c2128; padding: 0.125rem 0.375rem; border-radius: 3px; font
 <script>
 (function() {
   var SCRIPTS = {
-    linux: '#!/bin/bash\nset -e\nBASE="${1:-https://Ebinesh2511.github.io/resumBuilderConfig}"\necho "==> Downloading..."\ncurl -fL "$BASE/db-zip" -o resume_builder_v3.zip\nunzip -o resume_builder_v3.zip\nmongorestore --drop --db resume_builder_v3 dump/resume_builder_v3\nrm -f resume_builder_v3.zip && rm -rf dump\necho "Done."',
-    mac: '#!/bin/bash\nset -e\nBASE="${1:-https://Ebinesh2511.github.io/resumBuilderConfig}"\necho "==> Downloading..."\ncurl -fL "$BASE/db-zip" -o resume_builder_v3.zip\nunzip -o resume_builder_v3.zip\nmongorestore --drop --db resume_builder_v3 dump/resume_builder_v3\nrm -f resume_builder_v3.zip && rm -rf dump\necho "Done."',
-    win: 'param([string]$Base = "https://Ebinesh2511.github.io/resumBuilderConfig")\n$ErrorActionPreference = "Stop"\n$zipUrl = "$Base/db-zip"\n$dbName = "resume_builder_v3"\n$zipFile = "$dbName.zip"\nWrite-Host "==> Downloading..."\nInvoke-WebRequest -Uri $zipUrl -OutFile $zipFile\nWrite-Host "==> Extracting..."\nExpand-Archive -Path $zipFile -DestinationPath . -Force\nWrite-Host "==> Restoring..."\nmongorestore --drop --db $dbName "dump/$dbName"\nWrite-Host "==> Cleanup..."\nRemove-Item $zipFile -Force\nRemove-Item "dump" -Recurse -Force\nWrite-Host "Done."'
+    linux: '#!/bin/bash\nset -e\nBASE="${1:-https://Ebinesh2511.github.io/resumBuilderConfig}"\necho "==> Downloading..."\ncurl -fL "$BASE/db-zip" -o resume_builder_v3.zip\nunzip -o resume_builder_v3.zip\necho "==> Restoring via Docker..."\ndocker run --rm -v "$(pwd)/dump:/dump" --add-host host.docker.internal:host-gateway mongo:latest mongorestore --host host.docker.internal --drop --db resume_builder_v3 /dump/resume_builder_v3\nrm -f resume_builder_v3.zip && rm -rf dump\necho "Done."',
+    mac: '#!/bin/bash\nset -e\nBASE="${1:-https://Ebinesh2511.github.io/resumBuilderConfig}"\necho "==> Downloading..."\ncurl -fL "$BASE/db-zip" -o resume_builder_v3.zip\nunzip -o resume_builder_v3.zip\necho "==> Restoring via Docker..."\ndocker run --rm -v "$(pwd)/dump:/dump" --add-host host.docker.internal:host-gateway mongo:latest mongorestore --host host.docker.internal --drop --db resume_builder_v3 /dump/resume_builder_v3\nrm -f resume_builder_v3.zip && rm -rf dump\necho "Done."',
+    win: 'param([string]$Base = "https://Ebinesh2511.github.io/resumBuilderConfig")\n$ErrorActionPreference = "Stop"\n$zipUrl = "$Base/db-zip"\n$dbName = "resume_builder_v3"\n$zipFile = "$dbName.zip"\nWrite-Host "==> Downloading..."\nInvoke-WebRequest -Uri $zipUrl -OutFile $zipFile\nWrite-Host "==> Extracting..."\nExpand-Archive -Path $zipFile -DestinationPath . -Force\nWrite-Host "==> Restoring via Docker..."\ndocker run --rm -v "$(pwd)/dump:/dump" --add-host host.docker.internal:host-gateway mongo:latest mongorestore --host host.docker.internal --drop --db $dbName /dump/$dbName\nWrite-Host "==> Cleanup..."\nRemove-Item $zipFile -Force\nRemove-Item "dump" -Recurse -Force\nWrite-Host "Done."'
   };
   var FILENAMES = { linux: 'script.sh', mac: 'script.sh', win: 'script.ps1' };
   var LINKS = { linux: '/resumBuilderConfig/linux/script', mac: '/resumBuilderConfig/mac/script', win: '/resumBuilderConfig/win/script' };
