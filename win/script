@@ -3,25 +3,30 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$zipUrl = "$Base/db-zip"
+
 $dbName = "resume_builder_v3"
+$zipUrl = "$Base/db-zip"
 $zipFile = "$dbName.zip"
 
-Write-Host "==> Downloading database dump from $zipUrl"
-Invoke-WebRequest -Uri $zipUrl -OutFile $zipFile
+Write-Host "==> Downloading..."
+Invoke-WebRequest $zipUrl -OutFile $zipFile
 
 Write-Host "==> Extracting..."
-Expand-Archive -Path $zipFile -DestinationPath . -Force
+Expand-Archive $zipFile -DestinationPath . -Force
 
-Write-Host "==> Restoring via Docker (one-time)..."
+Write-Host "==> Restoring..."
 docker run --rm `
-  -v "$(pwd)/dump:/dump" `
+  -v "${PWD}:/restore" `
   --add-host host.docker.internal:host-gateway `
   mongo:latest `
-  mongorestore --host host.docker.internal --drop --db $dbName /dump/$dbName
+  mongorestore `
+    --host host.docker.internal `
+    --drop `
+    --db $dbName `
+    "/restore/$dbName"
 
 Write-Host "==> Cleanup..."
 Remove-Item $zipFile -Force
-Remove-Item "dump" -Recurse -Force
+Remove-Item $dbName -Recurse -Force
 
-Write-Host "Done! Database $dbName restored."
+Write-Host "Done!"

@@ -2,22 +2,27 @@
 set -e
 
 BASE="${1:-https://Ebinesh2511.github.io/resumBuilderConfig}"
+DB_NAME="resume_builder_v3"
 
-echo "==> Downloading database dump from $BASE/db-zip"
-curl -fL "$BASE/db-zip" -o resume_builder_v3.zip
+echo "==> Downloading..."
+curl -fL "$BASE/db-zip" -o "$DB_NAME.zip"
 
 echo "==> Extracting..."
-unzip -o resume_builder_v3.zip
+unzip -o "$DB_NAME.zip"
 
-echo "==> Restoring via Docker (one-time)..."
+echo "==> Restoring..."
 docker run --rm \
-  -v "$(pwd)/dump:/dump" \
+  -v "$(pwd):/restore" \
   --add-host host.docker.internal:host-gateway \
   mongo:latest \
-  mongorestore --host host.docker.internal --drop --db resume_builder_v3 /dump/resume_builder_v3
+  mongorestore \
+    --host host.docker.internal \
+    --drop \
+    --db "$DB_NAME" \
+    "/restore/$DB_NAME"
 
 echo "==> Cleanup..."
-rm -f resume_builder_v3.zip
-rm -rf dump
+rm -f "$DB_NAME.zip"
+rm -rf "$DB_NAME"
 
-echo "Done! Database resume_builder_v3 restored."
+echo "Done."
